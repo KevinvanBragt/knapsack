@@ -24,15 +24,14 @@ namespace knapsack
             return random.Next(min, max);
         }
 
-        public bool GetRandomBool()
+        public string GetRandomBool()
         {
-            return random.Next(0, 2) == 1;
+            return random.Next(0, 2).ToString();
         }
 
         public double GetProbability()
         {
             return random.NextDouble();
         }
-
     }
 }

@@ -6,20 +6,26 @@ namespace knapsack
 {
     public static class ItemList
     {
+        private static Item[] Items;
         private static int LowerLimit = 0;
         private static int UpperLimit = 1000;
-        
-        public static void Initialize(int lowerLimit, int upperLimit)
+
+        public static int itemValue(int index) => Items[index].value;
+        public static int itemWeight(int index) => Items[index].weight;
+
+        public static void Initialize(int lowerLimit, int upperLimit, int geneCount)
         {
             LowerLimit = lowerLimit;
             UpperLimit = upperLimit;
+            generateRandomItems(geneCount);
+            logConditions();
         }
 
-        public static Item[] generateItems(int count)
+        private static void generateRandomItems(int geneCount)
         {
             var randomNumberGenerator = new Random();
-            var items = new Item[count];
-            for (int i = 0; i < count; i++)
+            var items = new Item[geneCount];
+            for (int i = 0; i < geneCount; i++)
             {
                 items[i] = new Item
                 {
@@ -28,7 +34,28 @@ namespace knapsack
                 };
             }
 
-            return items;
+            Items = items;
         }
+
+        private static void logConditions()
+        {
+            Console.WriteLine("you can choose between these items:");
+            foreach (Item item in Items)
+            {
+                Console.WriteLine("weight: {0}; value: {1}", item.weight, item.value);
+            }
+            Console.WriteLine();
+        }
+    }
+
+    public class Item : IGene
+    {
+        public int weight;
+        public int value;
+    }
+
+    interface IGene
+    {
+
     }
 }

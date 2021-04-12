@@ -4,18 +4,30 @@ using System.Linq;
 
 namespace knapsack
 {
+
+    public interface ICandidate
+    {
+        public int Fitness()
+        {
+            EnsureCandidateIsValid();
+            return CalculateFitness();
+        }
+        abstract void EnsureCandidateIsValid();
+        abstract int CalculateFitness();
+
+        abstract void mutate();
+    }
+
     /// <summary>
     /// indicates a possible solution (/genome)
     /// </summary>
-    public class Knapsack
+    public class Knapsack : ICandidate
     {
         private static int WeightLimit;
         private static int GeneCount;
         private static RandomHelper RandomHelper;
-
-        public Item[] content { get; private set; }
-        private int weight => content.Sum(i => i.included ? i.weight : 0);
-        public int Fitness { get; private set; }
+        public string[] Genomes = null;
+        public int Fitness;
 
         public static void Initialize(int weightLimit, int geneCount)
         {
@@ -24,53 +36,66 @@ namespace knapsack
             RandomHelper = RandomHelper.GetInstance();
         }
 
-        public Knapsack(Item[] items, bool isGenerationZero)
+        public Knapsack(string[] genomes = null)
         {
-            content = items.Clone() as Item[];
-            if (isGenerationZero)
+            if (genomes != null)
             {
-                foreach (Item item in content)
+                Genomes = genomes;
+            } 
+            else
+            {
+                genomes = new string[GeneCount];
+                for (int i=0; i< GeneCount; i++)
                 {
-                    item.included = RandomHelper.GetRandomBool();
+                    genomes[i] = RandomHelper.GetRandomBool();
                 }
             }
-            calculateFitness();
+
+            this.Fitness = ((ICandidate)this).Fitness();
         }
 
-        private void calculateFitness()
+        public int CalculateFitness()
         {
-            ensureSolutionIsValid();
-            this.Fitness = content.Sum(i => i.included ? i.value : 0);
+            var fitness = 0;
+            for (int i=0; i< Genomes.Length; i++)
+            {
+                fitness += Genomes[i] == "1" ? ItemList.itemValue(i) : 0;
+            }
+            return fitness;
         }
 
-        private void ensureSolutionIsValid()
+        public void EnsureCandidateIsValid()
         {
-            var excessWeight = weight - WeightLimit;
+            var excessWeight = this.weight() - WeightLimit;
             while (excessWeight > 0)
             {
-                var randomNumber = RandomHelper.GetRandomInt(0, GeneCount - 1);
-                var item = content[randomNumber];
-                if (item.included)
+                var randomNumber = RandomHelper.GetRandomInt(1, GeneCount);
+                if (Genomes[randomNumber] == "1")
                 {
-                    excessWeight -= item.weight;
-                    item.included = false;
+                    excessWeight -= ItemList.itemWeight(randomNumber);
+                    Genomes[randomNumber] = "0";
                 }
             }
+        }
+
+        private int weight()
+        {
+            var weight = 0;
+            for (int i = 0; i < Genomes.Length; i++)
+            {
+                weight += Genomes[i] == "1" ? ItemList.itemWeight(i) : 0;
+            }
+
+            return weight;
         }
 
         public void LogKnapsack()
         {
-            //todo hier een logger voor maken
-            foreach (Item item in content)
+            foreach (string item in Genomes)
             {
-                if (item.included)
-                {
-                    Console.Write("item value {0}, item weight {1}\n", item.value, item.weight);
-                }
+                    Console.Write(item);
             }
             Console.WriteLine("fitness: {0}\n", Fitness);
-
-
         }
     }
 }

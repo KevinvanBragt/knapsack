@@ -8,7 +8,7 @@ namespace knapsack
         static void Main(string[] args)
         {
             //setup variables
-            var nrOfItems = 10;
+            var nrOfItems = 5;
             var weightLimit = 1500;
             var lowerLimit = 0;
             var upperLimit = 1000;
@@ -17,25 +17,11 @@ namespace knapsack
             var crossOverRate = 0.5;
                        
             Knapsack.Initialize(weightLimit, nrOfItems);
-            ItemList.Initialize(lowerLimit, upperLimit);
-            
-            //create some random items && show
-            var items = ItemList.generateItems(nrOfItems);
-            logConditions(items, weightLimit);
+            ItemList.Initialize(lowerLimit, upperLimit, nrOfItems);
+            var solver = new Solver(nrOfItems, populationSize, crossOverRate, mutationRate);
 
             //start process
-            var solver = new Solver(items, populationSize, crossOverRate);
             solver.Solve();
-        }
-
-        private static void logConditions(Item[] items, int weightLimit)
-        {
-            Console.WriteLine("weightLimit: {0}", weightLimit );
-            Console.WriteLine("you can choose between these items:");
-            foreach (Item item in items) {
-                Console.WriteLine("weight: {0}; value: {1}", item.weight, item.value);
-            }
-            Console.WriteLine();
         }
     }
 }
