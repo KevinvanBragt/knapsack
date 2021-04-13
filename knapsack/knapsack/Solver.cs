@@ -5,49 +5,53 @@ using System.Text;
 
 namespace knapsack
 {
-    public class Solver
+    public class Solver : IGeneticAlgorithm
     {
-        private static RandomHelper randomHelper;
-        private static int PopulationSize;
-        private static int geneCount;
-        private static double CrossOverRate;
-        private static double MutationRate;
-        public static List<Knapsack> currentGeneration = new List<Knapsack>();
-        public static List<Knapsack> nextGeneration = new List<Knapsack>();
-        public int generationCount = 0;
+        private int PopulationSize;
+        private int geneCount;
+        private double CrossOverRate;
+        private double MutationRate;
 
-        public Solver(int geneCount, int populationSize, double crossOverRate, double mutationRate)
+        private RandomHelper randomHelper;
+        public List<ICandidate> currentGeneration = new List<ICandidate>();
+        public List<ICandidate> nextGeneration = new List<ICandidate>();
+        public int generationCount = 0;
+        public Item[] Items;
+
+        public Solver(Item[] items, int populationSize, double crossOverRate, double mutationRate)
         {
             PopulationSize = populationSize;
             CrossOverRate = crossOverRate;
             MutationRate = mutationRate;
             randomHelper = RandomHelper.GetInstance();
+            Items = items;
+            geneCount = items.Length;
         }
-        public void Solve()
+        public void Run()
         {
-            createInitialPopulation();
+            CreateInitialPopulation();
             Console.WriteLine("best of start:");
             var bestOfStart = getBestOfCurrentGeneration();
-            bestOfStart.LogKnapsack();
+            (bestOfStart as Knapsack).LogKnapsack();
 
-            while (generationCount < 100) { //todo: track improvement instead
-                createNextGeneration();
+            while (generationCount < 1000) { //todo: track improvement instead
+                CreateNextGeneration();
                 generationCount++;
             }
 
             Console.WriteLine("solution:");
             var solution = getBestOfCurrentGeneration();
-            solution.LogKnapsack();           
+            (solution as Knapsack).LogKnapsack();           
         }
 
-        public Knapsack getBestOfCurrentGeneration()
+        private ICandidate getBestOfCurrentGeneration()
         {
-            var maxValue = currentGeneration.Max(k => k.Fitness);
-            var solution = currentGeneration.FirstOrDefault(k => k.Fitness == maxValue);
+            var maxValue = currentGeneration.Max(k => k.GetFitness());
+            var solution = currentGeneration.FirstOrDefault(k => k.GetFitness() == maxValue);
             return solution;
         }
 
-        public void createInitialPopulation()
+        public void CreateInitialPopulation()
         {
             Console.WriteLine("created the following candidates");
             for (int i = 0; i < PopulationSize; i++)
@@ -56,23 +60,24 @@ namespace knapsack
             }
         }
 
-        public void createNextGeneration()
+        public void CreateNextGeneration()
         {
-            nextGeneration = new List<Knapsack>(100);
+            nextGeneration = new List<ICandidate>(100);
             do
             {
-                var parentA = selectOne();
-                var parentB = selectOne();
+                var parentA = SelectOne();
+                var parentB = SelectOne();
 
                 var probability = randomHelper.GetProbability();
-                var children = new Knapsack[] { parentA, parentB };
+                var children = new ICandidate[] { parentA, parentB };
                 if (probability < CrossOverRate)
                 {
-                    var crossOverPoint = randomHelper.GetRandomInt(0, geneCount - 1);
-                    children = crossOver(parentA, parentB, crossOverPoint);
+                    var crossOverPoint = randomHelper.GetRandomInt(1, geneCount - 1);
+                    children = CrossOver(parentA, parentB, crossOverPoint);
                 }
 
-                mutate(ref children);
+                children[0].Mutate(MutationRate);
+                children[1].Mutate(MutationRate);
 
                 nextGeneration.AddRange(children);
             } while (nextGeneration.Count < PopulationSize);
@@ -81,16 +86,16 @@ namespace knapsack
             nextGeneration = null;
         }
 
-        public Knapsack selectOne()
+        public ICandidate SelectOne()
         {
             //roulette wheel selection
             //todo: hoe zit dit met dubbele values?
-            var totalFitnessScore = currentGeneration.Sum(g => g.Fitness);
+            var totalFitnessScore = currentGeneration.Sum(g => g.GetFitness());
             var randomValue = randomHelper.GetRandomInt(0, totalFitnessScore);
             
             for (int i=0; i< PopulationSize; i++)
             {
-                randomValue -= currentGeneration[i].Fitness;
+                randomValue -= currentGeneration[i].GetFitness();
                 if (randomValue <= 0)
                 {
                     return currentGeneration[i];
@@ -100,37 +105,24 @@ namespace knapsack
             return currentGeneration[PopulationSize-1];
         }
 
-        public static Knapsack[] crossOver(Knapsack parentA, Knapsack parentB, int crossOverPoint)
+        public ICandidate[] CrossOver(ICandidate parentA, ICandidate parentB, int crossOverPoint)
         {
             //true true, false , false, true
-            var piA = parentA.Genomes;
-            var piB = parentB.Genomes;
-
-            var childAItems = piA.Take(crossOverPoint)
-                .Concat(piB.Skip(crossOverPoint).Take(geneCount - crossOverPoint))
-                .ToArray();
-            var childBItems = piB.Take(crossOverPoint)
-                .Concat(piA.Skip(crossOverPoint).Take(geneCount - crossOverPoint))
-                .ToArray();
+            var piA = parentA.GetGenomes();
+            var piB = parentB.GetGenomes();
+                       
+            var childAItems = piA.Substring(0, crossOverPoint) + piB.Substring(crossOverPoint, geneCount-crossOverPoint);
+            var childBItems = piB.Substring(0, crossOverPoint) + piA.Substring(crossOverPoint, geneCount-crossOverPoint);
 
             var childA = new Knapsack(childAItems);
             var childB = new Knapsack(childBItems);
 
             return new Knapsack[] { childA, childB };
-        } 
-
-        private void mutate(ref Knapsack[] children)
-        {
-            foreach(Knapsack child in children)
-            {
-                var probability = randomHelper.GetProbability();
-                if (probability < MutationRate)
-                {
-                    var geneIndex = randomHelper.GetRandomInt(0, geneCount - 1);
-                    child.Genomes[geneIndex] = child.Genomes[geneIndex] == "0" ? "1" : "0";
-                }
-            }
         }
 
+        public bool IsTerminateCondition()
+        {
+            return generationCount >= 100;
+        }
     }
 }

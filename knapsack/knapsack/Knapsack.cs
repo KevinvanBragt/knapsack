@@ -4,31 +4,18 @@ using System.Linq;
 
 namespace knapsack
 {
-
-    public interface ICandidate
+    public abstract class Candidate : ICandidate
     {
-        public int Fitness()
-        {
-            EnsureCandidateIsValid();
-            return CalculateFitness();
-        }
-        abstract void EnsureCandidateIsValid();
-        abstract int CalculateFitness();
+        protected static int WeightLimit;
+        protected static int GeneCount;
+        protected static RandomHelper RandomHelper;
+        private int? Fitness = null;
 
-        abstract void mutate();
-    }
-
-    /// <summary>
-    /// indicates a possible solution (/genome)
-    /// </summary>
-    public class Knapsack : ICandidate
-    {
-        private static int WeightLimit;
-        private static int GeneCount;
-        private static RandomHelper RandomHelper;
-        public string[] Genomes = null;
-        public int Fitness;
-
+        /// <summary>
+        /// initialize Candidate static fields
+        /// </summary>
+        /// <param name="weightLimit"></param>
+        /// <param name="geneCount"></param>
         public static void Initialize(int weightLimit, int geneCount)
         {
             WeightLimit = weightLimit;
@@ -36,66 +23,119 @@ namespace knapsack
             RandomHelper = RandomHelper.GetInstance();
         }
 
-        public Knapsack(string[] genomes = null)
+        public int GetFitness()
         {
-            if (genomes != null)
+            if (this.Fitness.HasValue)
             {
-                Genomes = genomes;
+                return this.Fitness.Value;
+            }
+            else
+            {
+                this.EnsureCandidateIsValid();
+                this.Fitness = this.CalculateFitness();
+                return this.Fitness.Value;
+            }
+        }
+
+        public abstract string GetGenomes();
+
+        /// <summary>
+        /// mutates the candidate given a probability
+        /// </summary>
+        public abstract void Mutate(double mutationRate);
+
+        /// <summary>
+        /// deals with invalid candidates
+        /// </summary>
+        public abstract void EnsureCandidateIsValid();
+
+        /// <summary>
+        /// calculates the fitness value
+        /// </summary>
+        /// <returns></returns>
+        protected abstract int CalculateFitness();
+    }
+
+    /// <summary>
+    /// indicates a possible solution (/genome)
+    /// </summary>
+    public class Knapsack : Candidate
+    {
+        private int[] Genomes = null;
+
+        //takes a string so deep cloning is not necessary
+        public Knapsack(string genomes = null)
+        {
+            if (!string.IsNullOrEmpty(genomes))
+            {
+                Genomes = new int[GeneCount];
+                for (int x=0; x<genomes.Length; x++)
+                {
+                    Genomes[x] = int.Parse(genomes.Substring(x, 1));
+                }
             } 
             else
             {
-                genomes = new string[GeneCount];
-                for (int i=0; i< GeneCount; i++)
+                Genomes = new int[GeneCount];
+                for (int i=0; i<GeneCount; i++)
                 {
-                    genomes[i] = RandomHelper.GetRandomBool();
+                    Genomes[i] = RandomHelper.GetRandomBool();
                 }
             }
-
-            this.Fitness = ((ICandidate)this).Fitness();
         }
-
-        public int CalculateFitness()
+        public override string GetGenomes()
         {
-            var fitness = 0;
-            for (int i=0; i< Genomes.Length; i++)
+            var genome = "";
+            foreach (int x in Genomes)
             {
-                fitness += Genomes[i] == "1" ? ItemList.itemValue(i) : 0;
+                genome += x;
             }
-            return fitness;
+            return genome;
         }
-
-        public void EnsureCandidateIsValid()
+        public void LogKnapsack()
+        {
+            Console.WriteLine("genomes: {0} & fitness: {1}\n", this.Genomes, this.GetFitness());
+        }
+        public override void Mutate(double mutationRate)
+        {
+            var probability = RandomHelper.GetProbability();
+            if (probability < mutationRate)
+            {
+                var geneIndex = RandomHelper.GetRandomInt(0, Genomes.Length - 1);
+                Genomes[geneIndex] = Genomes[geneIndex] == 0 ? 1 : 0;
+            }
+        }
+        public override void EnsureCandidateIsValid()
         {
             var excessWeight = this.weight() - WeightLimit;
             while (excessWeight > 0)
             {
                 var randomNumber = RandomHelper.GetRandomInt(1, GeneCount);
-                if (Genomes[randomNumber] == "1")
+                if (Genomes.ElementAt(randomNumber).Equals("1"))
                 {
                     excessWeight -= ItemList.itemWeight(randomNumber);
-                    Genomes[randomNumber] = "0";
+                    Genomes[randomNumber] = '0';
                 }
             }
         }
-
+        protected override int CalculateFitness()
+        {
+            var fitness = 0;
+            for (int i = 0; i < Genomes.Length; i++)
+            {
+                fitness += Genomes[i] == 1 ? ItemList.itemValue(i) : 0;
+            }
+            return fitness;
+        }
         private int weight()
         {
             var weight = 0;
             for (int i = 0; i < Genomes.Length; i++)
             {
-                weight += Genomes[i] == "1" ? ItemList.itemWeight(i) : 0;
+                weight += Genomes[i] == '1' ? ItemList.itemWeight(i) : 0;
             }
 
             return weight;
-        }
-
-        public void LogKnapsack()
-        {
-            foreach (string item in Genomes)
-            {
-                    Console.Write(item);
-            }
-            Console.WriteLine("fitness: {0}\n", Fitness);
         }
     }
 }

@@ -24,9 +24,9 @@ namespace knapsack
             return random.Next(min, max);
         }
 
-        public string GetRandomBool()
+        public int GetRandomBool()
         {
-            return random.Next(0, 2).ToString();
+            return random.Next(0, 2);
         }
 
         public double GetProbability()

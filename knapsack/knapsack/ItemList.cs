@@ -6,7 +6,7 @@ namespace knapsack
 {
     public static class ItemList
     {
-        private static Item[] Items;
+        public static Item[] Items { get; private set; }
         private static int LowerLimit = 0;
         private static int UpperLimit = 1000;
 
@@ -48,14 +48,9 @@ namespace knapsack
         }
     }
 
-    public class Item : IGene
+    public class Item
     {
         public int weight;
         public int value;
-    }
-
-    interface IGene
-    {
-
     }
 }

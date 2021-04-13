@@ -23,38 +23,23 @@ namespace tests
             var crossOverRate = 0.5;
 
             Knapsack.Initialize(weightLimit, nrOfItems);
-            ItemList.Initialize(lowerLimit, upperLimit);
-            items = ItemList.generateRandomItems(nrOfItems);
+            ItemList.Initialize(lowerLimit, upperLimit, nrOfItems);
         }
 
         [Test]
         public void crossOverFunction_shouldCrossGenesCorrectly()
         {
             //setup
-            var parentA = new Knapsack(items, true);
-            var parentB = new Knapsack(items, true);
-
-            foreach (Item item in parentA.Genomes)
-            {
-                item.included = true;
-            }
-
-            foreach (Item item in parentB.Genomes)
-            {
-                item.included = false;
-            }
+            var parentA = new Knapsack("00000");
+            var parentB = new Knapsack("11111");
 
             //act
-            //expected = A { 11100 }; B { 00011 };
-            var children = Solver.crossOver(parentA, parentB, 2);
-            var childContentA = children[0].Genomes;
-            var childContentB = children[1].Genomes;
-            var childAHasItemsIncluded = childContentA.Any(i => i.included);
-            var childBHasItemsNotIncluded = childContentB.Any(i => !i.included);
+            var children = Solver.CrossOver(parentA, parentB, 2);
 
             //assert
-            Assert.IsTrue(childAHasItemsIncluded && childBHasItemsNotIncluded);
-            Assert.IsTrue(childContentA[0].included && childContentA[1].included && childContentA[2].included && !childContentA[3].included && !childContentA[4].included);
+            //expected = A { 11100 }; B { 00011 };
+            Assert.AreEqual(children[0].GetGenomes(), "00011");
+            Assert.AreEqual(children[1].GetGenomes(), "11100");
         }
     }
 }
