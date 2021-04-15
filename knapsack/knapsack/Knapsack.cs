@@ -1,67 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using GeneticAlgorithm;
 
 namespace knapsack
 {
-    public abstract class Candidate : ICandidate
+    /// <summary>
+    /// indicates a possible solution (/genome)
+    /// </summary>
+    public class Knapsack : ICandidate
     {
+        private int[] Genomes = null;
         protected static int WeightLimit;
         protected static int GeneCount;
         protected static RandomHelper RandomHelper;
         private int? Fitness = null;
 
-        /// <summary>
-        /// initialize Candidate static fields
-        /// </summary>
-        /// <param name="weightLimit"></param>
-        /// <param name="geneCount"></param>
         public static void Initialize(int weightLimit, int geneCount)
         {
             WeightLimit = weightLimit;
             GeneCount = geneCount;
             RandomHelper = RandomHelper.GetInstance();
         }
-
-        public int GetFitness()
-        {
-            if (this.Fitness.HasValue)
-            {
-                return this.Fitness.Value;
-            }
-            else
-            {
-                this.EnsureCandidateIsValid();
-                this.Fitness = this.CalculateFitness();
-                return this.Fitness.Value;
-            }
-        }
-
-        public abstract string GetGenomes();
-
-        /// <summary>
-        /// mutates the candidate given a probability
-        /// </summary>
-        public abstract void Mutate(double mutationRate);
-
-        /// <summary>
-        /// deals with invalid candidates
-        /// </summary>
-        public abstract void EnsureCandidateIsValid();
-
-        /// <summary>
-        /// calculates the fitness value
-        /// </summary>
-        /// <returns></returns>
-        protected abstract int CalculateFitness();
-    }
-
-    /// <summary>
-    /// indicates a possible solution (/genome)
-    /// </summary>
-    public class Knapsack : Candidate
-    {
-        private int[] Genomes = null;
 
         //takes a string so deep cloning is not necessary
         public Knapsack(string genomes = null)
@@ -79,11 +38,12 @@ namespace knapsack
                 Genomes = new int[GeneCount];
                 for (int i=0; i<GeneCount; i++)
                 {
-                    Genomes[i] = RandomHelper.GetRandomBool();
+                    Genomes[i] = RandomHelper.GetRandomInt(0, 2);
                 }
             }
         }
-        public override string GetGenomes()
+        
+        public string GetGenomes()
         {
             var genome = "";
             foreach (int x in Genomes)
@@ -92,11 +52,13 @@ namespace knapsack
             }
             return genome;
         }
-        public void LogKnapsack()
+        
+        public void LogCandidate()
         {
-            Console.WriteLine("genomes: {0} & fitness: {1}\n", this.Genomes, this.GetFitness());
+            Console.WriteLine("genomes: {0} & fitness: {1}\n", this.GetGenomes(), this.GetFitness());
         }
-        public override void Mutate(double mutationRate)
+        
+        public void Mutate(double mutationRate)
         {
             var probability = RandomHelper.GetProbability();
             if (probability < mutationRate)
@@ -105,7 +67,22 @@ namespace knapsack
                 Genomes[geneIndex] = Genomes[geneIndex] == 0 ? 1 : 0;
             }
         }
-        public override void EnsureCandidateIsValid()
+        
+        public int GetFitness()
+        {
+            if (this.Fitness.HasValue)
+            {
+                return this.Fitness.Value;
+            }
+            else
+            {
+                this.EnsureCandidateIsValid();
+                this.Fitness = this.CalculateFitness();
+                return this.Fitness.Value;
+            }
+        }
+        
+        public void EnsureCandidateIsValid()
         {
             var excessWeight = this.weight() - WeightLimit;
             while (excessWeight > 0)
@@ -118,7 +95,8 @@ namespace knapsack
                 }
             }
         }
-        protected override int CalculateFitness()
+        
+        protected int CalculateFitness()
         {
             var fitness = 0;
             for (int i = 0; i < Genomes.Length; i++)
@@ -127,6 +105,7 @@ namespace knapsack
             }
             return fitness;
         }
+        
         private int weight()
         {
             var weight = 0;

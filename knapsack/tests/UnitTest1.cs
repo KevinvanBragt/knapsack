@@ -9,6 +9,7 @@ namespace tests
     {
         private Item[] items;
         private List<Knapsack> generation;
+        private Solver solver;
 
         [SetUp]
         public void Setup()
@@ -24,6 +25,7 @@ namespace tests
 
             Knapsack.Initialize(weightLimit, nrOfItems);
             ItemList.Initialize(lowerLimit, upperLimit, nrOfItems);
+            solver = new Solver(ItemList.Items, populationSize, crossOverRate, mutationRate);
         }
 
         [Test]
@@ -34,12 +36,21 @@ namespace tests
             var parentB = new Knapsack("11111");
 
             //act
-            var children = Solver.CrossOver(parentA, parentB, 2);
+            var children = solver.CrossOver(parentA, parentB, 2);
 
             //assert
             //expected = A { 11100 }; B { 00011 };
-            Assert.AreEqual(children[0].GetGenomes(), "00011");
-            Assert.AreEqual(children[1].GetGenomes(), "11100");
+            Assert.AreEqual(children[0].GetGenomes(), "00111");
+            Assert.AreEqual(children[1].GetGenomes(), "11000");
+        }
+
+        [Test]
+        public void mutateFuntion_shouldSwitchBoolean()
+        {
+            var item = new Knapsack("00011");
+            item.Mutate(1.0);
+
+            Assert.AreNotEqual("00011", item.GetGenomes());
         }
     }
 }

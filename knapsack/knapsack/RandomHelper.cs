@@ -24,11 +24,6 @@ namespace knapsack
             return random.Next(min, max);
         }
 
-        public int GetRandomBool()
-        {
-            return random.Next(0, 2);
-        }
-
         public double GetProbability()
         {
             return random.NextDouble();

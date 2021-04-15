@@ -9,3 +9,7 @@
 /knapsack/tests/obj
 /knapsack/tests/bin/Debug/netcoreapp3.1
 /knapsack/.vs/knapsack/DesignTimeBuild
+/knapsack/GeneticAlgorithm/obj/Debug/netcoreapp3.1
+/knapsack/GeneticAlgorithm/bin/Debug/netcoreapp3.1
+/knapsack/GeneticAlgorithm/obj/GeneticAlgorithm.csproj.nuget.cache
+/knapsack/GeneticAlgorithm/obj

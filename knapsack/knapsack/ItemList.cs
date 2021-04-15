@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace knapsack
 {
@@ -12,7 +10,6 @@ namespace knapsack
 
         public static int itemValue(int index) => Items[index].value;
         public static int itemWeight(int index) => Items[index].weight;
-
         public static void Initialize(int lowerLimit, int upperLimit, int geneCount)
         {
             LowerLimit = lowerLimit;
@@ -20,7 +17,6 @@ namespace knapsack
             generateRandomItems(geneCount);
             logConditions();
         }
-
         private static void generateRandomItems(int geneCount)
         {
             var randomNumberGenerator = new Random();
@@ -29,14 +25,13 @@ namespace knapsack
             {
                 items[i] = new Item
                 {
-                    value = randomNumberGenerator.Next(LowerLimit, UpperLimit) * 5,
+                    value = randomNumberGenerator.Next(LowerLimit, UpperLimit),
                     weight = randomNumberGenerator.Next(LowerLimit, UpperLimit)
                 };
             }
 
             Items = items;
         }
-
         private static void logConditions()
         {
             Console.WriteLine("you can choose between these items:");
