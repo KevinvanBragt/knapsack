@@ -126,7 +126,7 @@ namespace knapsack
                 generationCount = 0;
             }
 
-            return generationCount >= 100;
+            return generationCount >= 25;
         }
     }
 }

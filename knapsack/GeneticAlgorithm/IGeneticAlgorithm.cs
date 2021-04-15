@@ -23,7 +23,7 @@ namespace GeneticAlgorithm
             }
 
             Console.WriteLine("solution:");
-            var solution = GetBestCandidateOfCurrentGeneration();
+            var solution = GetBestCandidateOfCurrentGeneration(true);
             solution.LogCandidate();
         }
 
